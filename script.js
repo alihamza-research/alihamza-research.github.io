@@ -303,8 +303,15 @@
       tagBox.classList.add('split');
     }
 
+    // Has Poppins (weight 600) really finished loading? Until it has, keep the built-in Poppins values above
+    const poppinsLoaded = () => {
+      try { return Array.from(document.fonts || []).some(f => /Poppins/.test(f.family) && f.status === 'loaded' && String(f.weight) === '600'); }
+      catch (e) { return false; }
+    };
+
     // Measure the real "i" dot of the loaded font: draw "i" and dotless "ı", diff the pixels
     const measureDot = () => {
+      if (!poppinsLoaded()) return null;     // never measure a temporary fallback font (slow mobile connections)
       try {
         const S = 200, W = 260, H = 300, base = 230, x0 = 40;
         const canvas = document.createElement('canvas');
@@ -332,15 +339,28 @@
       } catch (e) { return null; }
     };
 
-    // Put the dot over the stem, in em so it scales with the name (call while untransformed)
+    // Put the dot over the stem, in em so it scales with the name. Works mid-intro too (divides out the scale).
     const placeTittle = () => {
       const fs = parseFloat(getComputedStyle(nameRun).fontSize);
-      const base = (marker.getBoundingClientRect().top - ival.getBoundingClientRect().top) / fs;
+      const scale = (nameRun.getBoundingClientRect().width / nameRun.offsetWidth) || 1;
+      const base = (marker.getBoundingClientRect().top - ival.getBoundingClientRect().top) / (fs * scale);
       tittle.style.left = (DOT.cx - DOT.d / 2) + 'em';
       tittle.style.top = (base - DOT.cy - DOT.d / 2) + 'em';
       tittle.style.width = tittle.style.height = DOT.d + 'em';
       stem.style.transformOrigin = `50% ${base}em`;
     };
+    const refreshDot = () => {
+      const measured = measureDot();
+      if (measured) Object.assign(DOT, measured);
+      placeTittle();
+    };
+    // Re-place the dot whenever the real font arrives (it can be late on phones) and on rotate / resize
+    if (document.fonts) {
+      if (document.fonts.ready) document.fonts.ready.then(refreshDot).catch(() => {});
+      if (document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', refreshDot);
+    }
+    let dotTimer = 0;
+    addEventListener('resize', () => { clearTimeout(dotTimer); dotTimer = setTimeout(refreshDot, 120); });
 
     const running = [];
     const listeners = 'AbortController' in window ? new AbortController() : null;
@@ -374,9 +394,7 @@
     ]).catch(() => {});
 
     fontsReady.then(async () => {
-      const measured = measureDot();
-      if (measured) Object.assign(DOT, measured);
-      placeTittle();
+      refreshDot();
 
       if (!root.classList.contains('intro-on')) { heroReady(); return; }
       if (window.scrollY > 40 || typeof nameRun.animate !== 'function') { finish(); return; }
