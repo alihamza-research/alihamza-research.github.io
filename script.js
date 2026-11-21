@@ -303,15 +303,8 @@
       tagBox.classList.add('split');
     }
 
-    // Has Poppins (weight 600) really finished loading? Until it has, keep the built-in Poppins values above
-    const poppinsLoaded = () => {
-      try { return Array.from(document.fonts || []).some(f => /Poppins/.test(f.family) && f.status === 'loaded' && String(f.weight) === '600'); }
-      catch (e) { return false; }
-    };
-
-    // Measure the real "i" dot of the loaded font: draw "i" and dotless "ı", diff the pixels
+    // Measure the "i" dot of whatever font is rendering right now: draw "i" and dotless "ı", diff the pixels
     const measureDot = () => {
-      if (!poppinsLoaded()) return null;     // never measure a temporary fallback font (slow mobile connections)
       try {
         const S = 200, W = 260, H = 300, base = 230, x0 = 40;
         const canvas = document.createElement('canvas');
@@ -371,11 +364,19 @@
       window.AH_HERO_READY = true;
       document.dispatchEvent(new Event('ah:hero-ready'));
     };
+    // Once the full stop has landed, show the font's own "i": its dot is drawn by the font itself,
+    // so it sits exactly right on every phone, browser and font. The separate dot stays in the
+    // layout (invisible) as the launch point for the portrait dots.
+    const settleI = () => {
+      if (stem.textContent !== 'i') stem.textContent = 'i';
+      tittle.style.visibility = 'hidden';
+    };
     const finish = () => {
       if (finished) return;
       finished = true;
       running.forEach(a => { try { a.cancel(); } catch (e) { /* already gone */ } });
       nameRun.style.transform = '';
+      settleI();
       root.classList.remove('intro-on');
       if (listeners) listeners.abort();
       heroReady();
@@ -396,7 +397,7 @@
     fontsReady.then(async () => {
       refreshDot();
 
-      if (!root.classList.contains('intro-on')) { heroReady(); return; }
+      if (!root.classList.contains('intro-on')) { settleI(); heroReady(); return; }
       if (window.scrollY > 40 || typeof nameRun.animate !== 'function') { finish(); return; }
 
       const skip = () => finish();
@@ -414,6 +415,8 @@
         const dx = innerWidth / 2 - (r.left + r.width / 2);
         const dy = innerHeight / 2 - (r.top + r.height / 2);
         const start = `translate(${dx}px, ${dy}px) scale(${s})`;
+        stem.textContent = 'ı';            // intro: dotless letter + the separate full stop
+        tittle.style.visibility = 'visible';
         nameRun.style.transformOrigin = '50% 50%';
         nameRun.style.transform = start;
         tittle.style.transformOrigin = '50% 100%';
@@ -447,7 +450,8 @@
         play(stem, [{ opacity: 1, transform: 'scaleY(0)' }, { opacity: 1, transform: 'scaleY(1)' }],
           { duration: 650, delay: 1750, easing: SMOOTH });
         play(tittle, [{ opacity: 1, transform: at(0) }, { opacity: 1, transform: 'translateY(0)' }],
-          { duration: 650, delay: 1750, easing: SMOOTH, fill: 'forwards' });
+          { duration: 650, delay: 1750, easing: SMOOTH, fill: 'forwards' })
+          .finished.then(settleI).catch(() => {});   // the moment it lands, the real "i" takes over
         letters.slice(2).forEach((el, i) => typeIn(el, 2350 + i * 90));
 
         // 3 · the name glides to the bottom of the hero and grows
