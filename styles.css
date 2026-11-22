@@ -450,13 +450,13 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   .phd-pill-tag { padding: 7px 10px; }
   .phd-pill .arr { display: none; }
 }
-.hero-about { grid-column: 1; grid-row: 2; max-width: 31em; margin-top: clamp(44px, 9vh, 96px); }
+.hero-about { grid-column: 1; grid-row: 2; max-width: 40em; margin-top: clamp(44px, 9vh, 96px); }
 .hero-name { grid-column: 1; grid-row: 4; }
 .hero-tag { grid-column: 1; grid-row: 5; }
 .hero-side { grid-column: 2; grid-row: 1 / -1; display: flex; flex-direction: column; align-items: flex-end; gap: 24px; }
 .hero-portrait { height: var(--ph); aspect-ratio: 160 / 180; }
 .hero-side .hero-cta { margin-top: auto; justify-content: flex-end; }
-.about-title { max-width: 14em; font-size: clamp(24px, 2.5vw, 36px); line-height: 1.18; letter-spacing: -.025em; }
+.about-title { max-width: 17em; font-size: clamp(24px, 2.5vw, 36px); line-height: 1.18; letter-spacing: -.025em; }
 .about-title em { font-weight: 300; }
 
 /* Canvas behind the hero content: the dots fly out of the "i" and assemble the portrait */
