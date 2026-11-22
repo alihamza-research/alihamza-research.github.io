@@ -71,14 +71,15 @@
   color-scheme: dark;
 }
 
-/* 06 · Linen / Navy / Amber */
+/* 06 · Linen / Navy / Sienna Brown */
 :root[data-theme="linen"] {
-  --c60: #FAF0E6; --c30: #1B2A4A; --c10: #FFB000;
+  --c60: #FAF0E6; --c30: #1B2A4A; --c10: #A0522D;
   --ink: #1A2238; --ink-soft: #5E6474; --head: #1B2A4A;
-  --on30: #FAF0E6; --on30-soft: #A9B1C4; --on10: #1B2A4A;
+  --on30: #FAF0E6; --on30-soft: #A9B1C4; --on10: #FFFFFF;
   --line: rgba(27, 42, 74, .14); --line30: rgba(250, 240, 230, .14);
   --card: rgba(255, 255, 255, .55); --card-edge: #1B2A4A;
-  --accent-edge: #1B2A4A; --path: #1B2A4A; --glow: rgba(255, 176, 0, .45);
+  --accent-edge: #A0522D; --path: #A0522D; --glow: rgba(160, 82, 45, .38);
+  --mark-fg: #FAF0E6; --mark-bar: block;   /* brown is too dark to read as text on Navy: key figures there are Linen with a brown bar */
   color-scheme: light;
 }
 
@@ -93,15 +94,15 @@
   color-scheme: light;
 }
 
-/* 08 · Ricotta Cream / Prussian Blue / Lobster Red */
+/* 08 · Prussian Blue / Ricotta Cream / Lobster Red (backgrounds swapped: the page is Prussian Blue, the sections Ricotta Cream) */
 :root[data-theme="ricotta"] {
-  --c60: #F8F4E9; --c30: #003153; --c10: #CF3A24;
-  --ink: #0F1E2C; --ink-soft: #5B6470; --head: #003153;
-  --on30: #F8F4E9; --on30-soft: #9FB0C0; --on10: #FFFFFF;
-  --line: rgba(0, 49, 83, .14); --line30: rgba(248, 244, 233, .15);
-  --card: rgba(255, 255, 255, .55); --card-edge: #003153;
-  --accent-edge: #CF3A24; --path: #CF3A24; --glow: rgba(207, 58, 36, .32);
-  color-scheme: light;
+  --c60: #003153; --c30: #F8F4E9; --c10: #CF3A24;
+  --ink: #F4F1EA; --ink-soft: #A9BCCB; --head: #F8F4E9;
+  --on30: #003153; --on30-soft: #4E6577; --on10: #FFFFFF;
+  --line: rgba(248, 244, 233, .14); --line30: rgba(0, 49, 83, .15);
+  --card: rgba(248, 244, 233, .06); --card-edge: #F8F4E9;
+  --accent-edge: #CF3A24; --path: #CF3A24; --glow: rgba(207, 58, 36, .4);
+  color-scheme: dark;
 }
 
 /* Portrait: black and white dots on every palette (dark photo tones → black, light → white) */
