@@ -302,9 +302,9 @@
   /* ------------------------------------------------------------------
      Hero intro
      1 · a full stop drops from the top and bounces on the baseline
-     2 · every letter flips like a split-flap board through random
-         letters, then they lock in from left to right; after "Al" the
-         stem of the "i" grows and lifts the full stop into its dot
+     2 · a board flips like calendar pages through Pakistan → NUST →
+         COMSATS → Ali Hamza; the full stop hops along as each word's
+         full stop, lands on the "i", and its stem lifts it into the dot
      3 · the name glides to the bottom of the hero and grows big
      4 · the tagline types in, then the rest of the page fades in
      Click, scroll or press any key to skip.
@@ -416,32 +416,27 @@
     let dotTimer = 0;
     addEventListener('resize', () => { clearTimeout(dotTimer); dotTimer = setTimeout(refreshDot, 120); });
 
-    // Split-flap: each slot flips through letters of about its own width, so nothing shifts
-    let advance = null;
-    const flipPool = ch => {
-      if (!advance) {
-        const ctx = document.createElement('canvas').getContext('2d');
-        ctx.font = `600 100px ${getComputedStyle(nameRun).fontFamily}`;
-        const cache = {};
-        advance = c => (cache[c] = cache[c] || ctx.measureText(c).width);
+    // Word board: before the name, the board flips through these words, each one a quick
+    // left-to-right ripple of calendar-page flips, with the dropped full stop as its full stop
+    const WORDS = ['Pakistan', 'NUST', 'COMSATS'];
+    const layers = [];
+    const makeLayer = word => {
+      const layer = document.createElement('span');
+      layer.className = 'flap-word';
+      for (const ch of word) {
+        const c = document.createElement('span');
+        c.className = 'fl';
+        c.textContent = ch;
+        layer.appendChild(c);
       }
-      // no "i" / "j": their dots would compete with the full stop
-      const set = ch === ch.toLowerCase() ? 'abcdefghklmnopqrstuvwxyzI' : 'ABCDEFGHJKLNOPQRSTUVXYZ';
-      const target = advance(ch);                       // in hundredths of an em
-      const others = Array.from(set).filter(c => c !== ch)
-        .sort((p, q) => Math.abs(advance(p) - target) - Math.abs(advance(q) - target));
-      const snug = others.filter(c => advance(c) <= target + 3 && advance(c) >= target * 0.75).slice(0, 10);
-      return snug.length >= 4 ? snug : others.filter(c => advance(c) <= target + 12).slice(0, 5);
+      const stop = document.createElement('span');
+      stop.className = 'fl-stop';                       // room for the full stop after the word
+      layer.appendChild(stop);
+      nameRun.appendChild(layer);
+      layers.push(layer);
+      return layer;
     };
-    const lockSlots = () => letters.forEach((el, i) => {
-      if (!finals[i].trim()) return;
-      el.style.width = (el.getBoundingClientRect().width / parseFloat(getComputedStyle(nameRun).fontSize)).toFixed(4) + 'em';
-      el.style.textAlign = 'center';
-    });
-    const releaseSlots = () => letters.forEach((el, i) => {
-      el.textContent = finals[i];
-      el.style.width = el.style.textAlign = el.style.opacity = '';
-    });
+    const clearBoard = () => { layers.forEach(l => l.remove()); layers.length = 0; };
 
     const running = [];
     const timers = [];
@@ -465,7 +460,7 @@
       timers.forEach(clearTimeout);
       running.forEach(a => { try { a.cancel(); } catch (e) { /* already gone */ } });
       nameRun.style.transform = '';
-      releaseSlots();
+      clearBoard();
       settleI();
       root.classList.remove('intro-on');
       if (listeners) listeners.abort();
@@ -477,36 +472,6 @@
       return a;
     };
     const later = (fn, ms) => timers.push(setTimeout(fn, ms));
-
-    // One slot of the board: fast random flips that slow down, then the real letter locks in
-    const flap = (el, duration, last) => play(el, last ? [
-      { transform: 'perspective(10em) rotateX(-90deg)', opacity: 0.4 },
-      { transform: 'perspective(10em) rotateX(10deg)', opacity: 1, offset: 0.72 },
-      { transform: 'perspective(10em) rotateX(0deg)', opacity: 1 }
-    ] : [
-      { transform: 'perspective(10em) rotateX(-90deg)', opacity: 0.35 },
-      { transform: 'perspective(10em) rotateX(0deg)', opacity: 1 }
-    ], { duration, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'none' });
-    const flipSlot = (i, startAt, settleAt) => {
-      const el = letters[i], pool = flipPool(finals[i]);
-      let t = startAt, prev = '';
-      while (true) {
-        const p = (t - startAt) / (settleAt - startAt);
-        const gap = 55 + 115 * p * p;                     // 55ms apart at first, ~170ms near the end
-        if (t + gap > settleAt) break;
-        const at = t;
-        later(() => {
-          let c;
-          do { c = pool[Math.floor(Math.random() * pool.length)]; } while (c === prev && pool.length > 1);
-          prev = c;
-          el.textContent = c;
-          el.style.opacity = '1';
-          flap(el, Math.min(150, gap + 20), false);
-        }, at);
-        t += gap;
-      }
-      later(() => { el.textContent = finals[i]; el.style.opacity = '1'; flap(el, 340, true); }, settleAt);
-    };
 
     const fontsReady = Promise.race([
       document.fonts && document.fonts.load
@@ -527,10 +492,9 @@
       // Scrolling by any means (scrollbar, keyboard, restore) also skips to the finished page
       addEventListener('scroll', () => { if (window.scrollY > 40) finish(); },
         listeners ? { passive: true, signal: listeners.signal } : { passive: true });
-      later(finish, 10000);   // safety net
+      later(finish, 11000);   // safety net
 
       try {
-        lockSlots();
         const fs = parseFloat(getComputedStyle(nameRun).fontSize);
         const r = nameRun.getBoundingClientRect();
         const s = Math.min(0.85, Math.min(innerWidth * 0.62, 640) / r.width);
@@ -543,49 +507,89 @@
         nameRun.style.transform = start;
         placeTittle();
 
+        // Where each word's full stop goes, as a sideways offset of the dot (in the name's own px)
+        const scale = emPx() / fs;
+        const home = ival.getBoundingClientRect().left + DOT.cx * emPx();
+        const stops = WORDS.map(word => {
+          const box = makeLayer(word).querySelector('.fl-stop').getBoundingClientRect();
+          return (box.left + box.width / 2 - home) / scale;
+        });
+
         const rest = DOT.db;                      // em: lowers the dot onto the baseline, like a full stop
         const drop = (innerHeight * 0.8) / s;     // px above the baseline where the dot starts
-        const at = (lift, squash = '') => `translateY(calc(${rest}em - ${lift}px))${squash}`;
+        const pos = (x, lift = 0, sx = 1, sy = 1) => `translate(${x}px, calc(${rest}em - ${lift}px)) scale(${sx}, ${sy})`;
         const EASE_IN = 'cubic-bezier(.55,0,1,.45)';
         const EASE_OUT = 'cubic-bezier(0,.55,.45,1)';
         const SMOOTH = 'cubic-bezier(.65,0,.35,1)';
         const SOFT = 'cubic-bezier(.22,1,.36,1)';
+        const FLIP = 'cubic-bezier(.2,.7,.3,1)';
+        const T_WORD = [1300, 2150, 2900];        // Pakistan, NUST, COMSATS flip in
+        const T_NAME = 3700;                      // Ali Hamza flips in
+        const STAGGER = 24;                       // ms between neighbouring letters as a word flips in
+        const OUT_LEAD = 240;                     // a word flips away this long before the next arrives
+        const flipIn = (el, delay) => play(el, [
+          { opacity: 0, transform: 'perspective(10em) rotateX(-90deg)' },
+          { opacity: 1, transform: 'perspective(10em) rotateX(10deg)', offset: 0.7 },
+          { opacity: 1, transform: 'perspective(10em) rotateX(0deg)' }
+        ], { duration: 260, delay, easing: FLIP });
+        const flipOut = (el, delay) => play(el, [
+          { opacity: 1, transform: 'perspective(10em) rotateX(0deg)' },
+          { opacity: 0, transform: 'perspective(10em) rotateX(90deg)' }
+        ], { duration: 200, delay, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' });
+        const hop = (from, to, delay) => play(tittle, [
+          { opacity: 1, transform: pos(from) },
+          { opacity: 1, transform: pos((from + to) / 2, fs * 0.22 + Math.abs(to - from) * 0.16), offset: 0.45 },
+          { opacity: 1, transform: pos(to, 0, 1.18, 0.82), offset: 0.82 },
+          { opacity: 1, transform: pos(to) }
+        ], { duration: 420, delay, easing: 'cubic-bezier(.45,0,.55,1)', fill: 'forwards' });
 
-        // 1 · the full stop drops and bounces
+        // 1 · the full stop drops and bounces where "Pakistan." will end
+        const x0 = stops[0];
         play(tittle, [
-          { opacity: 1, transform: at(drop), easing: EASE_IN },
-          { opacity: 1, transform: at(0, ' scale(1.28, .74)'), offset: 0.48, easing: EASE_OUT },
-          { opacity: 1, transform: at(fs * 0.42), offset: 0.68, easing: EASE_IN },
-          { opacity: 1, transform: at(0, ' scale(1.1, .9)'), offset: 0.84, easing: EASE_OUT },
-          { opacity: 1, transform: at(fs * 0.1), offset: 0.93, easing: EASE_IN },
-          { opacity: 1, transform: at(0) }
+          { opacity: 1, transform: pos(x0, drop), easing: EASE_IN },
+          { opacity: 1, transform: pos(x0, 0, 1.28, 0.74), offset: 0.48, easing: EASE_OUT },
+          { opacity: 1, transform: pos(x0, fs * 0.42), offset: 0.68, easing: EASE_IN },
+          { opacity: 1, transform: pos(x0, 0, 1.1, 0.9), offset: 0.84, easing: EASE_OUT },
+          { opacity: 1, transform: pos(x0, fs * 0.1), offset: 0.93, easing: EASE_IN },
+          { opacity: 1, transform: pos(x0) }
         ], { duration: 1200, delay: 300 });
 
-        // 2 · the board: slots wake up outward from the full stop, then lock in left to right
-        const dotAt = letters.filter(el => el.compareDocumentPosition(ival) & Node.DOCUMENT_POSITION_FOLLOWING).length - 0.5;
-        const settle = [2400, 2560, 0, 2850, 3000, 3150, 3300, 3450];   // A l · H a m z a
-        letters.forEach((el, i) => {
-          if (!finals[i].trim()) return;
-          flipSlot(i, 1380 + Math.abs(i - dotAt) * 45, settle[i] || 2400 + i * 150);
+        // 2 · Pakistan → NUST → COMSATS: each word flips in, then flips away as the next arrives;
+        //     the full stop hops to the end of each new word
+        layers.forEach((layer, k) => {
+          const next = k + 1 < layers.length ? T_WORD[k + 1] : T_NAME;
+          Array.from(layer.querySelectorAll('.fl')).forEach((el, i) => {
+            flipIn(el, T_WORD[k] + i * STAGGER);
+            flipOut(el, next - OUT_LEAD + i * 10);
+          });
+          if (k > 0) hop(stops[k - 1], stops[k], T_WORD[k] + 60);
         });
-        // after "Al" locks in, the stem grows and lifts the full stop into the dot of the "i"
+
+        // 3 · Ali Hamza flips in; the full stop hops onto the "i" and its stem lifts it into the dot
+        const before = letters.filter(el => el.compareDocumentPosition(ival) & Node.DOCUMENT_POSITION_FOLLOWING).length;
+        letters.forEach((el, i) => {
+          if (finals[i].trim()) flipIn(el, T_NAME + (i + (i >= before ? 1 : 0)) * STAGGER);
+        });
+        hop(stops[stops.length - 1], 0, T_NAME + 60);
+        const T_LIFT = T_NAME + 500;
         play(stem, [{ opacity: 1, transform: 'scaleY(0)' }, { opacity: 1, transform: 'scaleY(1)' }],
-          { duration: 650, delay: 2600, easing: SMOOTH });
-        play(tittle, [{ opacity: 1, transform: at(0) }, { opacity: 1, transform: 'translateY(0)' }],
-          { duration: 650, delay: 2600, easing: SMOOTH, fill: 'forwards' })
-          .finished.then(settleI).catch(() => {});
+          { duration: 500, delay: T_LIFT, easing: SMOOTH });
+        play(tittle, [{ opacity: 1, transform: pos(0) }, { opacity: 1, transform: 'translate(0px, 0px) scale(1, 1)' }],
+          { duration: 500, delay: T_LIFT, easing: SMOOTH, fill: 'forwards' })
+          .finished.then(() => { settleI(); clearBoard(); }).catch(() => {});
 
-        // 3 · the name glides to the bottom of the hero and grows
+        // 4 · the name glides to the bottom of the hero and grows
+        const T_MOVE = T_LIFT + 540;
         play(nameRun, [{ transform: start }, { transform: 'none' }],
-          { duration: 1250, delay: 3800, easing: 'cubic-bezier(.76,0,.24,1)' });
+          { duration: 1150, delay: T_MOVE, easing: 'cubic-bezier(.76,0,.24,1)' });
 
-        // 4 · tagline, then the rest of the page
+        // 5 · tagline, then the rest of the page
         Array.from(document.querySelectorAll('.hero-tag .tc')).forEach((el, i) => play(el, [
           { opacity: 0, transform: 'translateY(.45em)' },
           { opacity: 1, transform: 'none' }
-        ], { duration: 520, delay: 4650 + i * 24, easing: SOFT }));
+        ], { duration: 520, delay: T_MOVE + 780 + i * 24, easing: SOFT }));
 
-        await sleep(5050);
+        await sleep(T_MOVE + 1150);
         if (!finished) { root.classList.remove('intro-on'); heroReady(); }
         await sleep(1500);
         finish();
@@ -606,6 +610,14 @@
      ------------------------------------------------------------------ */
   const hero = document.querySelector('.hero');
   const portraitBox = document.querySelector('.hero-portrait');
+  const hdPhoto = portraitBox && portraitBox.querySelector('.portrait-hd');
+  const showHD = () => {
+    if (!hdPhoto || !hero) return;
+    const go = () => setTimeout(() => hero.classList.add('hd'), 150);
+    if (hdPhoto.complete && hdPhoto.naturalWidth) go();
+    else hdPhoto.addEventListener('load', go, { once: true });
+  };
+  if (hdPhoto) hdPhoto.classList.toggle('bw', portraitLook === 'bw');
   const initPortrait = PD => {
     if (!PD || !PD.data || initPortrait.done) return;
     initPortrait.done = true;
@@ -733,7 +745,7 @@
           ctx.fillRect(x - s / 2, y - s / 2, s, s);
         }
       }
-      if (state === 'flying' && !moving) state = 'settled';
+      if (state === 'flying' && !moving) { state = 'settled'; showHD(); }
       // Animate only while the dots are flying in; once settled the picture is drawn once and left alone
       if (heroVisible && state === 'flying') raf = requestAnimationFrame(frame);
     };
@@ -765,7 +777,7 @@
     const start = () => {
       readShades();
       layout();
-      if (reduceMotion) { state = 'settled'; loop(); return; }
+      if (reduceMotion) { state = 'settled'; loop(); showHD(); return; }
       launch();
     };
     if (window.AH_HERO_READY) start();
@@ -773,6 +785,7 @@
 
     // Switching the look (dock button / "P"): recolour in place with a soft fade
     applyPortraitLook = () => {
+      if (hdPhoto) hdPhoto.classList.toggle('bw', portraitLook === 'bw');
       if (state === 'idle') return;
       regroup();
       loop();
@@ -793,6 +806,9 @@
   if (hero && portraitBox) {
     if (window.AH_PORTRAIT) initPortrait(window.AH_PORTRAIT);
     else document.addEventListener('ah:portrait-data', () => initPortrait(window.AH_PORTRAIT), { once: true });
+    // If the dot data never arrives, still show the HD photo a little after the name has settled
+    const fallbackHD = () => setTimeout(() => { if (!initPortrait.done) showHD(); }, 4000);
+    if (window.AH_HERO_READY) fallbackHD(); else document.addEventListener('ah:hero-ready', fallbackHD, { once: true });
   }
 
   /* ------------------------------------------------------------------
