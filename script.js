@@ -11,19 +11,11 @@
      Palettes (60 / 30 / 10). Keep ids in sync with the list in <head>.
      ------------------------------------------------------------------ */
   const THEMES = {
-    storm:    [['Storm Grey', '#4E545C'],    ['Matte Black', '#161616'],    ['Safety Orange', '#FF6B1A']],
-    desert:   [['Desert Sand', '#E8D6B6'],   ['Olive Drab', '#4B5320'],     ['Signal Yellow', '#F6B300']],
-    polar:    [['Polar White', '#F5F8FA'],   ['Glacier Blue', '#A9CDE4'],   ['Racing Red', '#D40000']],
-    oat:      [['Oat Milk', '#EFE7D8'],      ['Forest Green', '#234F35'],   ['Tomato Red', '#FF6347']],
-    midnight: [['Midnight Navy', '#142038'], ['Powder Blue', '#B0E0E6'],    ['Sunflower Yellow', '#FFC72C']],
-    blush:    [['Blush Pink', '#F6DADA'],    ['Charcoal Ink', '#23262B'],   ['Fresh Mint', '#3DDC97']],
-    ivory:    [['Antique Ivory', '#F2EBDC'], ['Piano Black', '#121212'],    ['Surf Turquoise', '#2CC5BD']],
-    sapphire: [['Deep Sapphire', '#0F2A57'], ['Pearl Shell', '#F1EAE0'],    ['Ember Orange', '#FF6B2C']],
-    lavender: [['Lavender Milk', '#ECE6F4'], ['Charcoal Slate', '#2F3541'], ['Mango Blaze', '#FFA62B']],
-    sesame:   [['Sesame Cream', '#F0E4CC'],  ['Cognac Leather', '#8A4A24'], ['Cobalt Blue', '#2456E8']],
     graphite: [['Graphite Teal', '#1E3638'], ['Mushroom Linen', '#D6CCBF'], ['Coral', '#FF7A59']],
-    gelato:   [['Gelato Cream', '#FBF3E3'],  ['Rosemary Green', '#4E6450'], ['Raspberry', '#D6336C']],
-    carbon:   [['Carbon Navy', '#111B2B'],   ['Glacier Sage', '#B7CCBF'],   ['Electric Lime', '#C5F04A']]
+    lavender: [['Lavender Milk', '#ECE6F4'], ['Charcoal Slate', '#2F3541'], ['Off White', '#FAF9F6']],
+    sapphire: [['Deep Sapphire', '#0F2A57'], ['Pearl Shell', '#F1EAE0'],    ['Lavender Milk', '#ECE6F4']],
+    ivory:    [['Antique Ivory', '#F2EBDC'], ['Piano Black', '#121212'],    ['Surf Turquoise', '#2CC5BD']],
+    storm:    [['Storm Grey', '#4E545C'],    ['Matte Black', '#161616'],    ['Safety Orange', '#FF6B1A']]
   };
   const ORDER = Object.keys(THEMES);
   const SHARE = [60, 30, 10];

@@ -7,123 +7,12 @@
    Optional per palette:
      --mark-fg / --mark-bar   → where the accent is too faint on the 30% colour,
                                 key figures there use plain ink plus a small accent bar
+     --accent-ink             → where the accent is too faint on the 60% colour, the few
+                                thin accent marks (logo dot, progress line, ladder marker,
+                                card hover line) use this instead
    ========================================================================== */
 
-/* 01 · Storm Grey / Matte Black / Safety Orange */
-:root,
-:root[data-theme="storm"] {
-  --c60: #4E545C; --c30: #161616; --c10: #FF6B1A;
-  --ink: #F3F3F1; --ink-soft: #CDD1D5; --head: #F7F7F5;
-  --on30: #EEEEEA; --on30-soft: #A6A6A2; --on10: #141414;
-  --line: rgba(243, 243, 241, .16); --line30: rgba(238, 238, 234, .14);
-  --card: rgba(22, 22, 22, .28); --card-edge: #161616;
-  --accent-edge: #FF6B1A; --path: #FF6B1A; --glow: rgba(255, 107, 26, .45);
-  color-scheme: dark;
-}
-
-/* 02 · Desert Sand / Olive Drab / Signal Yellow */
-:root[data-theme="desert"] {
-  --c60: #E8D6B6; --c30: #4B5320; --c10: #F6B300;
-  --ink: #262A12; --ink-soft: #5B5A40; --head: #4B5320;
-  --on30: #F2E8D5; --on30-soft: #CBC5A6; --on10: #1F230D;
-  --line: rgba(38, 42, 18, .18); --line30: rgba(242, 232, 213, .18);
-  --card: rgba(75, 83, 32, .06); --card-edge: #4B5320;
-  --accent-edge: #262A12; --path: #4B5320; --glow: rgba(246, 179, 0, .55);
-  color-scheme: light;
-}
-
-/* 03 · Polar White / Glacier Blue / Racing Red */
-:root[data-theme="polar"] {
-  --c60: #F5F8FA; --c30: #A9CDE4; --c10: #D40000;
-  --ink: #0E2638; --ink-soft: #4A6172; --head: #17405E;
-  --on30: #0B2233; --on30-soft: #2F4A5E; --on10: #FFFFFF;
-  --line: rgba(14, 38, 56, .13); --line30: rgba(11, 34, 51, .18);
-  --card: #FFFFFF; --card-edge: #A9CDE4;
-  --accent-edge: #D40000; --path: #D40000; --glow: rgba(212, 0, 0, .32);
-  color-scheme: light;
-}
-
-/* 04 · Oat Milk / Forest Green / Tomato Red */
-:root[data-theme="oat"] {
-  --c60: #EFE7D8; --c30: #234F35; --c10: #FF6347;
-  --ink: #1B2A21; --ink-soft: #4F5B52; --head: #234F35;
-  --on30: #F3EDE0; --on30-soft: #B9C7BC; --on10: #13261B;
-  --line: rgba(27, 42, 33, .16); --line30: rgba(243, 237, 224, .16);
-  --card: rgba(255, 255, 255, .45); --card-edge: #234F35;
-  --accent-edge: #FF6347; --path: #FF6347; --glow: rgba(255, 99, 71, .45);
-  color-scheme: light;
-}
-
-/* 05 · Midnight Navy / Powder Blue / Sunflower Yellow */
-:root[data-theme="midnight"] {
-  --c60: #142038; --c30: #B0E0E6; --c10: #FFC72C;
-  --ink: #EEF3F8; --ink-soft: #A9BBCF; --head: #B0E0E6;
-  --on30: #0E1A30; --on30-soft: #34506B; --on10: #142038;
-  --line: rgba(238, 243, 248, .14); --line30: rgba(14, 26, 48, .16);
-  --card: rgba(176, 224, 230, .06); --card-edge: #B0E0E6;
-  --accent-edge: #142038; --path: #FFC72C; --glow: rgba(255, 199, 44, .4);
-  --mark-fg: #0E1A30; --mark-bar: block;
-  color-scheme: dark;
-}
-
-/* 06 · Blush Pink / Charcoal Ink / Fresh Mint */
-:root[data-theme="blush"] {
-  --c60: #F6DADA; --c30: #23262B; --c10: #3DDC97;
-  --ink: #23262B; --ink-soft: #5C5055; --head: #23262B;
-  --on30: #F7EAEA; --on30-soft: #B9AEB1; --on10: #14201A;
-  --line: rgba(35, 38, 43, .15); --line30: rgba(247, 234, 234, .14);
-  --card: rgba(255, 255, 255, .4); --card-edge: #23262B;
-  --accent-edge: #23262B; --path: #23262B; --glow: rgba(61, 220, 151, .5);
-  color-scheme: light;
-}
-
-/* 07 · Antique Ivory / Piano Black / Surf Turquoise */
-:root[data-theme="ivory"] {
-  --c60: #F2EBDC; --c30: #121212; --c10: #2CC5BD;
-  --ink: #141414; --ink-soft: #5A554C; --head: #121212;
-  --on30: #F2EBDC; --on30-soft: #A8A29A; --on10: #0B1F1E;
-  --line: rgba(20, 20, 20, .14); --line30: rgba(242, 235, 220, .14);
-  --card: rgba(255, 255, 255, .5); --card-edge: #121212;
-  --accent-edge: #121212; --path: #121212; --glow: rgba(44, 197, 189, .45);
-  color-scheme: light;
-}
-
-/* 08 · Deep Sapphire / Pearl Shell / Ember Orange */
-:root[data-theme="sapphire"] {
-  --c60: #0F2A57; --c30: #F1EAE0; --c10: #FF6B2C;
-  --ink: #F4F1EC; --ink-soft: #B4C0D6; --head: #F1EAE0;
-  --on30: #0C2148; --on30-soft: #4A5A75; --on10: #0C1E3E;
-  --line: rgba(244, 241, 236, .14); --line30: rgba(12, 33, 72, .15);
-  --card: rgba(241, 234, 224, .06); --card-edge: #F1EAE0;
-  --accent-edge: #0C2148; --path: #FF6B2C; --glow: rgba(255, 107, 44, .4);
-  --mark-fg: #0C2148; --mark-bar: block;
-  color-scheme: dark;
-}
-
-/* 09 · Lavender Milk / Charcoal Slate / Mango Blaze */
-:root[data-theme="lavender"] {
-  --c60: #ECE6F4; --c30: #2F3541; --c10: #FFA62B;
-  --ink: #23272F; --ink-soft: #5D5869; --head: #2F3541;
-  --on30: #EEE9F5; --on30-soft: #B3B0BF; --on10: #23272F;
-  --line: rgba(35, 39, 47, .14); --line30: rgba(238, 233, 245, .14);
-  --card: rgba(255, 255, 255, .45); --card-edge: #2F3541;
-  --accent-edge: #2F3541; --path: #2F3541; --glow: rgba(255, 166, 43, .45);
-  color-scheme: light;
-}
-
-/* 10 · Sesame Cream / Cognac Leather / Cobalt Blue (accent chosen to complete the set) */
-:root[data-theme="sesame"] {
-  --c60: #F0E4CC; --c30: #8A4A24; --c10: #2456E8;
-  --ink: #2B1D14; --ink-soft: #6A5646; --head: #8A4A24;
-  --on30: #F6EBD6; --on30-soft: #EAD7C1; --on10: #FFFFFF;
-  --line: rgba(43, 29, 20, .15); --line30: rgba(246, 235, 214, .18);
-  --card: rgba(255, 255, 255, .4); --card-edge: #8A4A24;
-  --accent-edge: #F6EBD6; --path: #2456E8; --glow: rgba(36, 86, 232, .35);
-  --mark-fg: #F6EBD6; --mark-bar: block;
-  color-scheme: light;
-}
-
-/* 11 · Graphite Teal / Mushroom Linen / Coral (accent chosen to complete the set) */
+/* 01 · Graphite Teal / Mushroom Linen / Coral */
 :root[data-theme="graphite"] {
   --c60: #1E3638; --c30: #D6CCBF; --c10: #FF7A59;
   --ink: #EEF0EC; --ink-soft: #A9BDBA; --head: #D6CCBF;
@@ -135,31 +24,53 @@
   color-scheme: dark;
 }
 
-/* 12 · Gelato Cream / Rosemary Green / Raspberry (accent chosen to complete the set) */
-:root[data-theme="gelato"] {
-  --c60: #FBF3E3; --c30: #4E6450; --c10: #D6336C;
-  --ink: #232A22; --ink-soft: #5E6658; --head: #4E6450;
-  --on30: #FBF3E3; --on30-soft: #D3DCCB; --on10: #FFFFFF;
-  --line: rgba(35, 42, 34, .14); --line30: rgba(251, 243, 227, .18);
-  --card: rgba(255, 255, 255, .55); --card-edge: #4E6450;
-  --accent-edge: #FBF3E3; --path: #D6336C; --glow: rgba(214, 51, 108, .35);
-  --mark-fg: #FBF3E3; --mark-bar: block;
+/* 02 · Lavender Milk / Charcoal Slate / Off White */
+:root[data-theme="lavender"] {
+  --c60: #ECE6F4; --c30: #2F3541; --c10: #FAF9F6;
+  --ink: #23272F; --ink-soft: #5D5869; --head: #2F3541;
+  --on30: #EEE9F5; --on30-soft: #B3B0BF; --on10: #23272F;
+  --line: rgba(35, 39, 47, .14); --line30: rgba(238, 233, 245, .14);
+  --card: rgba(255, 255, 255, .45); --card-edge: #2F3541;
+  --accent-edge: #2F3541; --path: #2F3541; --glow: rgba(47, 53, 65, .32);
+  --accent-ink: #2F3541;   /* off-white would vanish on Lavender Milk: thin accent marks there use Charcoal Slate */
   color-scheme: light;
 }
 
-/* 13 · Carbon Navy / Glacier Sage / Electric Lime (accent chosen to complete the set) */
-:root[data-theme="carbon"] {
-  --c60: #111B2B; --c30: #B7CCBF; --c10: #C5F04A;
-  --ink: #EDF2EF; --ink-soft: #A3B4C2; --head: #B7CCBF;
-  --on30: #0E1724; --on30-soft: #3F5249; --on10: #111B2B;
-  --line: rgba(237, 242, 239, .13); --line30: rgba(14, 23, 36, .16);
-  --card: rgba(183, 204, 191, .06); --card-edge: #B7CCBF;
-  --accent-edge: #111B2B; --path: #C5F04A; --glow: rgba(197, 240, 74, .35);
-  --mark-fg: #0E1724; --mark-bar: block;
+/* 03 · Deep Sapphire / Pearl Shell / Lavender Milk */
+:root[data-theme="sapphire"] {
+  --c60: #0F2A57; --c30: #F1EAE0; --c10: #ECE6F4;
+  --ink: #F4F1EC; --ink-soft: #B4C0D6; --head: #F1EAE0;
+  --on30: #0C2148; --on30-soft: #4A5A75; --on10: #0C1E3E;
+  --line: rgba(244, 241, 236, .14); --line30: rgba(12, 33, 72, .15);
+  --card: rgba(241, 234, 224, .06); --card-edge: #F1EAE0;
+  --accent-edge: #0C2148; --path: #ECE6F4; --glow: rgba(236, 230, 244, .32);
+  --mark-fg: #0C2148; --mark-bar: block;
   color-scheme: dark;
 }
 
-/* Dot portrait: each palette paints the photo in its own colours */
+/* 04 · Antique Ivory / Piano Black / Surf Turquoise */
+:root[data-theme="ivory"] {
+  --c60: #F2EBDC; --c30: #121212; --c10: #2CC5BD;
+  --ink: #141414; --ink-soft: #5A554C; --head: #121212;
+  --on30: #F2EBDC; --on30-soft: #A8A29A; --on10: #0B1F1E;
+  --line: rgba(20, 20, 20, .14); --line30: rgba(242, 235, 220, .14);
+  --card: rgba(255, 255, 255, .5); --card-edge: #121212;
+  --accent-edge: #121212; --path: #121212; --glow: rgba(44, 197, 189, .45);
+  color-scheme: light;
+}
+
+/* 05 · Storm Grey / Matte Black / Safety Orange (default) */
+:root,
+:root[data-theme="storm"] {
+  --c60: #4E545C; --c30: #161616; --c10: #FF6B1A;
+  --ink: #F3F3F1; --ink-soft: #CDD1D5; --head: #F7F7F5;
+  --on30: #EEEEEA; --on30-soft: #A6A6A2; --on10: #141414;
+  --line: rgba(243, 243, 241, .16); --line30: rgba(238, 238, 234, .14);
+  --card: rgba(22, 22, 22, .28); --card-edge: #161616;
+  --accent-edge: #FF6B1A; --path: #FF6B1A; --glow: rgba(255, 107, 26, .45);
+  color-scheme: dark;
+}
+
 /* Portrait: black and white dots on every palette (dark photo tones → black, light → white) */
 :root { --dots: #0E0E0E 0, #363636 .32, #B4B4B4 .7, #F5F5F5 1; }
 
@@ -197,6 +108,7 @@ body.menu-open { overflow: hidden; }
   --fg-soft: var(--on30-soft);
   --hd: var(--on30);
   --rule: var(--line30);
+  --accent-ink: var(--c10);   /* on the 30% colour the accent itself reads fine */
   background: var(--bg);
   color: var(--fg);
 }
@@ -232,7 +144,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 
 /* ---------- Scroll progress ---------- */
 .progress { position: fixed; inset: 0 0 auto; z-index: 70; height: 2px; pointer-events: none; }
-.progress span { display: block; height: 100%; background: var(--c10); transform: scaleX(0); transform-origin: left; }
+.progress span { display: block; height: 100%; background: var(--accent-ink, var(--c10)); transform: scaleX(0); transform-origin: left; }
 
 /* ---------- Nav ---------- */
 .nav {
@@ -253,7 +165,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 
 .nav-inner { display: flex; align-items: center; gap: clamp(16px, 3vw, 40px); height: 76px; }
 .brand { margin-right: auto; font: 600 20px/1 var(--font); letter-spacing: -.02em; text-decoration: none; color: inherit; }
-.brand span { color: var(--c10); }
+.brand span { color: var(--accent-ink, var(--c10)); }
 
 .nav-links { display: flex; gap: 30px; }
 .nav-links a {
@@ -473,7 +385,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .rung-n { flex: none; min-width: 2ch; font-size: 11px; font-weight: 600; letter-spacing: .1em; font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .6s var(--rd, 0s); }
 .rung-t { display: block; overflow: hidden; padding-bottom: .1em; margin-bottom: -.1em; transition: translate .6s var(--ease); }
 .rung-t > span { display: block; transform: translateY(110%); transition: transform .9s var(--ease) var(--rd, 0s); }
-.ladder-mark { position: absolute; left: -2px; top: 0; width: 5px; height: 0; background: var(--c10); opacity: 0; transition: transform .8s var(--ease), height .8s var(--ease), opacity .5s; }
+.ladder-mark { position: absolute; left: -2px; top: 0; width: 5px; height: 0; background: var(--accent-ink, var(--c10)); opacity: 0; transition: transform .8s var(--ease), height .8s var(--ease), opacity .5s; }
 .ladder.built::before, .ladder.built .rung::after, .ladder.built .rung:first-child::before, .ladder.built .rung-t > span { transform: none; }
 .ladder.built .rung-n { opacity: .75; }
 .ladder.ready .ladder-mark { opacity: 1; }
@@ -574,7 +486,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 }
 .card::after {
   content: ""; position: absolute; left: 22px; right: 22px; top: -1px; height: 2px; border-radius: 2px;
-  background: var(--c10); transform: scaleX(0); transform-origin: left; transition: transform .6s var(--ease);
+  background: var(--accent-ink, var(--c10)); transform: scaleX(0); transform-origin: left; transition: transform .6s var(--ease);
 }
 .card:hover { transform: translateY(-4px); border-color: var(--fg-soft); box-shadow: 0 26px 50px -30px rgba(0, 0, 0, .45); }
 .card:hover::after { transform: none; }
