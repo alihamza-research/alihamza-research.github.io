@@ -15,7 +15,10 @@
     lavender: [['Lavender Milk', '#ECE6F4'], ['Charcoal Slate', '#2F3541'], ['Off White', '#FAF9F6']],
     sapphire: [['Deep Sapphire', '#0F2A57'], ['Pearl Shell', '#F1EAE0'],    ['Lavender Milk', '#ECE6F4']],
     ivory:    [['Antique Ivory', '#F2EBDC'], ['Piano Black', '#121212'],    ['Surf Turquoise', '#2CC5BD']],
-    storm:    [['Storm Grey', '#4E545C'],    ['Matte Black', '#161616'],    ['Safety Orange', '#FF6B1A']]
+    storm:    [['Storm Grey', '#4E545C'],    ['Matte Black', '#161616'],    ['Safety Orange', '#FF6B1A']],
+    linen:    [['Linen', '#FAF0E6'],         ['Navy', '#1B2A4A'],           ['Amber', '#FFB000']],
+    sky:      [['Sky', '#DCEBF5'],           ['Ocean', '#0E4D64'],          ['Coral', '#FF7A59']],
+    ricotta:  [['Ricotta Cream', '#F8F4E9'], ['Prussian Blue', '#003153'],  ['Lobster Red', '#CF3A24']]
   };
   const ORDER = Object.keys(THEMES);
   const SHARE = [60, 30, 10];

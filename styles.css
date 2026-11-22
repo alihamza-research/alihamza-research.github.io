@@ -71,6 +71,39 @@
   color-scheme: dark;
 }
 
+/* 06 · Linen / Navy / Amber */
+:root[data-theme="linen"] {
+  --c60: #FAF0E6; --c30: #1B2A4A; --c10: #FFB000;
+  --ink: #1A2238; --ink-soft: #5E6474; --head: #1B2A4A;
+  --on30: #FAF0E6; --on30-soft: #A9B1C4; --on10: #1B2A4A;
+  --line: rgba(27, 42, 74, .14); --line30: rgba(250, 240, 230, .14);
+  --card: rgba(255, 255, 255, .55); --card-edge: #1B2A4A;
+  --accent-edge: #1B2A4A; --path: #1B2A4A; --glow: rgba(255, 176, 0, .45);
+  color-scheme: light;
+}
+
+/* 07 · Sky / Ocean / Coral */
+:root[data-theme="sky"] {
+  --c60: #DCEBF5; --c30: #0E4D64; --c10: #FF7A59;
+  --ink: #0F2C3A; --ink-soft: #4C6676; --head: #0E4D64;
+  --on30: #EAF4FA; --on30-soft: #9DBCCB; --on10: #16242C;
+  --line: rgba(15, 44, 58, .14); --line30: rgba(234, 244, 250, .16);
+  --card: rgba(255, 255, 255, .5); --card-edge: #0E4D64;
+  --accent-edge: #0E4D64; --path: #0E4D64; --glow: rgba(255, 122, 89, .42);
+  color-scheme: light;
+}
+
+/* 08 · Ricotta Cream / Prussian Blue / Lobster Red */
+:root[data-theme="ricotta"] {
+  --c60: #F8F4E9; --c30: #003153; --c10: #CF3A24;
+  --ink: #0F1E2C; --ink-soft: #5B6470; --head: #003153;
+  --on30: #F8F4E9; --on30-soft: #9FB0C0; --on10: #FFFFFF;
+  --line: rgba(0, 49, 83, .14); --line30: rgba(248, 244, 233, .15);
+  --card: rgba(255, 255, 255, .55); --card-edge: #003153;
+  --accent-edge: #CF3A24; --path: #CF3A24; --glow: rgba(207, 58, 36, .32);
+  color-scheme: light;
+}
+
 /* Portrait: black and white dots on every palette (dark photo tones → black, light → white) */
 :root { --dots: #0E0E0E 0, #363636 .32, #B4B4B4 .7, #F5F5F5 1; }
 

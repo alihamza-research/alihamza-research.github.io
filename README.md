@@ -21,4 +21,4 @@ Open `index.html` in a browser, or serve the folder:
 python -m http.server 5500
 ```
 
-then visit http://localhost:5500. Add `?theme=graphite` (or `lavender`, `sapphire`, `ivory`, `storm`) to open a specific palette, and `?portrait=bw` for the black-and-white portrait.
+then visit http://localhost:5500. Add `?theme=graphite` (or `lavender`, `sapphire`, `ivory`, `storm`, `linen`, `sky`, `ricotta`) to open a specific palette, and `?portrait=bw` for the black-and-white portrait.
