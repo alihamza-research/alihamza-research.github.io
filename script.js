@@ -190,7 +190,8 @@
   });
 
   const format = (el, v) => {
-    let s = v.toFixed(+el.dataset.decimals || 0);
+    const d = +el.dataset.decimals || 0;
+    let s = el.dataset.sep ? v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }) : v.toFixed(d);
     if (el.dataset.pad) s = s.padStart(+el.dataset.pad, '0');
     el.textContent = s;
   };
