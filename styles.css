@@ -80,6 +80,7 @@
   --card: rgba(255, 255, 255, .55); --card-edge: #1B2A4A;
   --accent-edge: #A0522D; --path: #A0522D; --glow: rgba(160, 82, 45, .38);
   --mark-fg: #FAF0E6; --mark-bar: block;   /* brown is too dark to read as text on Navy: key figures there are Linen with a brown bar */
+  --hero-bg: #FAF9F6;                       /* the first screen (name + portrait) is Off White; the rest of the page stays Linen */
   color-scheme: light;
 }
 
@@ -354,6 +355,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 /* ---------- Hero ---------- */
 .hero {
   position: relative; display: flex;
+  background: var(--hero-bg, none);   /* a palette may give the first screen its own background */
   min-height: 100vh; min-height: 100svh;
   padding: 104px 0 clamp(40px, 7vh, 72px); overflow: hidden;
 }
