@@ -268,8 +268,9 @@
   /* ------------------------------------------------------------------
      Hero intro
      1 · a full stop drops from the top and bounces on the baseline
-     2 · "Al" types in, the stem of the "i" grows and lifts the full stop
-         into place as its dot, then "Hamza" types in
+     2 · every letter flips like a split-flap board through random
+         letters, then they lock in from left to right; after "Al" the
+         stem of the "i" grows and lifts the full stop into its dot
      3 · the name glides to the bottom of the hero and grows big
      4 · the tagline types in, then the rest of the page fades in
      Click, scroll or press any key to skip.
@@ -278,11 +279,16 @@
   if (nameRun) {
     const ival = nameRun.querySelector('.ival');
     const stem = nameRun.querySelector('.stem');
-    const tittle = nameRun.querySelector('.tittle');
-    const marker = nameRun.querySelector('.bl');
+    const tittle = nameRun.querySelector('.tittle');   // a second, real "i", clipped so only its dot shows (the stem is clipped to the rest)
+    const marker = nameRun.querySelector('.bl');       // zero-size box that sits exactly on the baseline
+    const letters = Array.from(nameRun.querySelectorAll('.ch'));
+    const finals = letters.map(el => el.textContent);
     const tagBox = document.querySelector('.hero-tag');
     const tagText = tagBox && tagBox.querySelector('.tag-anim');
-    const DOT = { cx: 0.14, cy: 0.7025, d: 0.17 };   // Poppins 600 "i" dot in em; refined at runtime
+    // Poppins 600 "i", in em above the baseline: dot centre (cx, cy), dot size d, dot bottom db, stem top st
+    const POPPINS = { cx: 0.14, cy: 0.7025, d: 0.17, db: 0.618, st: 0.555 };
+    const DOT = Object.assign({}, POPPINS);
+    let base = 0.81;                                     // em from the top of the "i" box down to the baseline
 
     // Tagline → words → letters (words never break in the middle)
     if (tagText) {
@@ -303,21 +309,30 @@
       tagBox.classList.add('split');
     }
 
-    // Measure the "i" dot of whatever font is rendering right now: draw "i" and dotless "ı", diff the pixels
+    const poppinsLoaded = () => {
+      try {
+        for (const f of document.fonts) {
+          if (/poppins/i.test(f.family) && String(f.weight) === '600' && f.style === 'normal' && f.status === 'loaded') return true;
+        }
+      } catch (e) { /* FontFaceSet not iterable */ }
+      return false;
+    };
+    // Only needed while a fallback font is showing: draw "i" and dotless "ı", diff the pixels
     const measureDot = () => {
       try {
-        const S = 200, W = 260, H = 300, base = 230, x0 = 40;
+        const S = 200, W = 260, H = 300, bl = 230, x0 = 40;
         const canvas = document.createElement('canvas');
         canvas.width = W; canvas.height = H;
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.font = `600 ${S}px ${getComputedStyle(nameRun).fontFamily}`;
-        const scan = ch => { ctx.clearRect(0, 0, W, H); ctx.fillText(ch, x0, base); return ctx.getImageData(0, 0, W, H).data; };
+        const scan = ch => { ctx.clearRect(0, 0, W, H); ctx.fillText(ch, x0, bl); return ctx.getImageData(0, 0, W, H).data; };
         const withDot = scan('i');
         const dotless = scan('ı');
-        let x1 = W, y1 = H, x2 = -1, y2 = -1;
+        let x1 = W, y1 = H, x2 = -1, y2 = -1, top = H;
         for (let y = 0; y < H; y++) {
           for (let x = 0; x < W; x++) {
             const k = (y * W + x) * 4 + 3;
+            if (dotless[k] > 127 && y < top) top = y;
             if (withDot[k] > 127 && dotless[k] < 20) {
               if (x < x1) x1 = x;
               if (x > x2) x2 = x;
@@ -327,27 +342,39 @@
           }
         }
         const d = (x2 - x1 + 1) / S;
-        if (x2 < 0 || d < 0.06 || d > 0.4) return null;
-        return { cx: ((x1 + x2 + 1) / 2 - x0) / S, cy: (base - (y1 + y2 + 1) / 2) / S, d };
+        if (x2 < 0 || top >= H || d < 0.06 || d > 0.4) return null;
+        const db = (bl - (y2 + 1)) / S, st = (bl - top) / S;
+        if (db <= st) return null;
+        return { cx: ((x1 + x2 + 1) / 2 - x0) / S, cy: (bl - (y1 + y2 + 1) / 2) / S, d, db, st };
       } catch (e) { return null; }
     };
 
-    // Put the dot over the stem, in em so it scales with the name. Works mid-intro too (divides out the scale).
-    const placeTittle = () => {
+    // Size of 1em on screen (the name is scaled while the intro plays)
+    const emPx = () => {
       const fs = parseFloat(getComputedStyle(nameRun).fontSize);
-      const scale = (nameRun.getBoundingClientRect().width / nameRun.offsetWidth) || 1;
-      const base = (marker.getBoundingClientRect().top - ival.getBoundingClientRect().top) / (fs * scale);
-      tittle.style.left = (DOT.cx - DOT.d / 2) + 'em';
-      tittle.style.top = (base - DOT.cy - DOT.d / 2) + 'em';
-      tittle.style.width = tittle.style.height = DOT.d + 'em';
-      stem.style.transformOrigin = `50% ${base}em`;
+      return fs * ((nameRun.getBoundingClientRect().width / nameRun.offsetWidth) || 1);
+    };
+    // The second "i" sits exactly over the stem; clip it between its dot and the top of the stem
+    const placeTittle = () => {
+      const b = (marker.getBoundingClientRect().top - ival.getBoundingClientRect().top) / emPx();
+      if (b > 0.2 && b < 2) base = b;
+      ival.style.setProperty('--cut', (base - (DOT.db + DOT.st) / 2).toFixed(4) + 'em');
+      tittle.style.transformOrigin = `${DOT.cx}em ${(base - DOT.db).toFixed(4)}em`;   // squash from the dot's underside
+      stem.style.transformOrigin = `50% ${base.toFixed(4)}em`;
     };
     const refreshDot = () => {
-      const measured = measureDot();
-      if (measured) Object.assign(DOT, measured);
+      Object.assign(DOT, (!poppinsLoaded() && measureDot()) || POPPINS);
       placeTittle();
     };
-    // Re-place the dot whenever the real font arrives (it can be late on phones) and on rotate / resize
+    // Where the dot of the "i" is on screen right now (the portrait dots stream out of it)
+    window.AH_DOT_AT = () => {
+      refreshDot();
+      const em = emPx();
+      return {
+        x: ival.getBoundingClientRect().left + DOT.cx * em,
+        y: marker.getBoundingClientRect().top - DOT.cy * em
+      };
+    };
     if (document.fonts) {
       if (document.fonts.ready) document.fonts.ready.then(refreshDot).catch(() => {});
       if (document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', refreshDot);
@@ -355,7 +382,35 @@
     let dotTimer = 0;
     addEventListener('resize', () => { clearTimeout(dotTimer); dotTimer = setTimeout(refreshDot, 120); });
 
+    // Split-flap: each slot flips through letters of about its own width, so nothing shifts
+    let advance = null;
+    const flipPool = ch => {
+      if (!advance) {
+        const ctx = document.createElement('canvas').getContext('2d');
+        ctx.font = `600 100px ${getComputedStyle(nameRun).fontFamily}`;
+        const cache = {};
+        advance = c => (cache[c] = cache[c] || ctx.measureText(c).width);
+      }
+      // no "i" / "j": their dots would compete with the full stop
+      const set = ch === ch.toLowerCase() ? 'abcdefghklmnopqrstuvwxyzI' : 'ABCDEFGHJKLNOPQRSTUVXYZ';
+      const target = advance(ch);                       // in hundredths of an em
+      const others = Array.from(set).filter(c => c !== ch)
+        .sort((p, q) => Math.abs(advance(p) - target) - Math.abs(advance(q) - target));
+      const snug = others.filter(c => advance(c) <= target + 3 && advance(c) >= target * 0.75).slice(0, 10);
+      return snug.length >= 4 ? snug : others.filter(c => advance(c) <= target + 12).slice(0, 5);
+    };
+    const lockSlots = () => letters.forEach((el, i) => {
+      if (!finals[i].trim()) return;
+      el.style.width = (el.getBoundingClientRect().width / parseFloat(getComputedStyle(nameRun).fontSize)).toFixed(4) + 'em';
+      el.style.textAlign = 'center';
+    });
+    const releaseSlots = () => letters.forEach((el, i) => {
+      el.textContent = finals[i];
+      el.style.width = el.style.textAlign = el.style.opacity = '';
+    });
+
     const running = [];
+    const timers = [];
     const listeners = 'AbortController' in window ? new AbortController() : null;
     let finished = false;
     // Tells the dot portrait (below) that the name has settled and it may assemble
@@ -364,18 +419,19 @@
       window.AH_HERO_READY = true;
       document.dispatchEvent(new Event('ah:hero-ready'));
     };
-    // Once the full stop has landed, show the font's own "i": its dot is drawn by the font itself,
-    // so it sits exactly right on every phone, browser and font. The separate dot stays in the
-    // layout (invisible) as the launch point for the portrait dots.
+    // Once the full stop has been lifted into place, join the two halves back into one letter.
+    // Both halves were the real "i" all along, so this is pixel-for-pixel invisible.
     const settleI = () => {
-      if (stem.textContent !== 'i') stem.textContent = 'i';
+      ival.classList.remove('split');
       tittle.style.visibility = 'hidden';
     };
     const finish = () => {
       if (finished) return;
       finished = true;
+      timers.forEach(clearTimeout);
       running.forEach(a => { try { a.cancel(); } catch (e) { /* already gone */ } });
       nameRun.style.transform = '';
+      releaseSlots();
       settleI();
       root.classList.remove('intro-on');
       if (listeners) listeners.abort();
@@ -386,12 +442,43 @@
       running.push(a);
       return a;
     };
+    const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+
+    // One slot of the board: fast random flips that slow down, then the real letter locks in
+    const flap = (el, duration, last) => play(el, last ? [
+      { transform: 'perspective(10em) rotateX(-90deg)', opacity: 0.4 },
+      { transform: 'perspective(10em) rotateX(10deg)', opacity: 1, offset: 0.72 },
+      { transform: 'perspective(10em) rotateX(0deg)', opacity: 1 }
+    ] : [
+      { transform: 'perspective(10em) rotateX(-90deg)', opacity: 0.35 },
+      { transform: 'perspective(10em) rotateX(0deg)', opacity: 1 }
+    ], { duration, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'none' });
+    const flipSlot = (i, startAt, settleAt) => {
+      const el = letters[i], pool = flipPool(finals[i]);
+      let t = startAt, prev = '';
+      while (true) {
+        const p = (t - startAt) / (settleAt - startAt);
+        const gap = 55 + 115 * p * p;                     // 55ms apart at first, ~170ms near the end
+        if (t + gap > settleAt) break;
+        const at = t;
+        later(() => {
+          let c;
+          do { c = pool[Math.floor(Math.random() * pool.length)]; } while (c === prev && pool.length > 1);
+          prev = c;
+          el.textContent = c;
+          el.style.opacity = '1';
+          flap(el, Math.min(150, gap + 20), false);
+        }, at);
+        t += gap;
+      }
+      later(() => { el.textContent = finals[i]; el.style.opacity = '1'; flap(el, 340, true); }, settleAt);
+    };
 
     const fontsReady = Promise.race([
       document.fonts && document.fonts.load
         ? document.fonts.load('600 100px Poppins', 'Aliı Hamza').then(() => document.fonts.ready)
         : Promise.resolve(),
-      sleep(1800)
+      sleep(3000)
     ]).catch(() => {});
 
     fontsReady.then(async () => {
@@ -406,22 +493,23 @@
       // Scrolling by any means (scrollbar, keyboard, restore) also skips to the finished page
       addEventListener('scroll', () => { if (window.scrollY > 40) finish(); },
         listeners ? { passive: true, signal: listeners.signal } : { passive: true });
-      setTimeout(finish, 9000);   // safety net
+      later(finish, 10000);   // safety net
 
       try {
+        lockSlots();
         const fs = parseFloat(getComputedStyle(nameRun).fontSize);
         const r = nameRun.getBoundingClientRect();
         const s = Math.min(0.85, Math.min(innerWidth * 0.62, 640) / r.width);
         const dx = innerWidth / 2 - (r.left + r.width / 2);
         const dy = innerHeight / 2 - (r.top + r.height / 2);
         const start = `translate(${dx}px, ${dy}px) scale(${s})`;
-        stem.textContent = 'ı';            // intro: dotless letter + the separate full stop
+        ival.classList.add('split');       // intro: the stem half of the "i" + its dot half as the full stop
         tittle.style.visibility = 'visible';
         nameRun.style.transformOrigin = '50% 50%';
         nameRun.style.transform = start;
-        tittle.style.transformOrigin = '50% 100%';
+        placeTittle();
 
-        const rest = DOT.cy - DOT.d / 2;          // em: lowers the dot onto the baseline, like a full stop
+        const rest = DOT.db;                      // em: lowers the dot onto the baseline, like a full stop
         const drop = (innerHeight * 0.8) / s;     // px above the baseline where the dot starts
         const at = (lift, squash = '') => `translateY(calc(${rest}em - ${lift}px))${squash}`;
         const EASE_IN = 'cubic-bezier(.55,0,1,.45)';
@@ -439,32 +527,31 @@
           { opacity: 1, transform: at(0) }
         ], { duration: 1200, delay: 300 });
 
-        // 2 · "Al" types in, the stem lifts the full stop into the dot of the "i", then "Hamza"
-        const letters = Array.from(nameRun.querySelectorAll('.ch'));
-        const typeIn = (el, delay) => play(el, [
-          { opacity: 0, transform: 'translateY(.3em)', filter: 'blur(8px)' },
-          { opacity: 1, transform: 'none', filter: 'blur(0)' }
-        ], { duration: 700, delay, easing: SOFT });
-        typeIn(letters[0], 1350);
-        typeIn(letters[1], 1450);
+        // 2 · the board: slots wake up outward from the full stop, then lock in left to right
+        const dotAt = letters.filter(el => el.compareDocumentPosition(ival) & Node.DOCUMENT_POSITION_FOLLOWING).length - 0.5;
+        const settle = [2400, 2560, 0, 2850, 3000, 3150, 3300, 3450];   // A l · H a m z a
+        letters.forEach((el, i) => {
+          if (!finals[i].trim()) return;
+          flipSlot(i, 1380 + Math.abs(i - dotAt) * 45, settle[i] || 2400 + i * 150);
+        });
+        // after "Al" locks in, the stem grows and lifts the full stop into the dot of the "i"
         play(stem, [{ opacity: 1, transform: 'scaleY(0)' }, { opacity: 1, transform: 'scaleY(1)' }],
-          { duration: 650, delay: 1750, easing: SMOOTH });
+          { duration: 650, delay: 2600, easing: SMOOTH });
         play(tittle, [{ opacity: 1, transform: at(0) }, { opacity: 1, transform: 'translateY(0)' }],
-          { duration: 650, delay: 1750, easing: SMOOTH, fill: 'forwards' })
-          .finished.then(settleI).catch(() => {});   // the moment it lands, the real "i" takes over
-        letters.slice(2).forEach((el, i) => typeIn(el, 2350 + i * 90));
+          { duration: 650, delay: 2600, easing: SMOOTH, fill: 'forwards' })
+          .finished.then(settleI).catch(() => {});
 
         // 3 · the name glides to the bottom of the hero and grows
         play(nameRun, [{ transform: start }, { transform: 'none' }],
-          { duration: 1250, delay: 3450, easing: 'cubic-bezier(.76,0,.24,1)' });
+          { duration: 1250, delay: 3800, easing: 'cubic-bezier(.76,0,.24,1)' });
 
         // 4 · tagline, then the rest of the page
         Array.from(document.querySelectorAll('.hero-tag .tc')).forEach((el, i) => play(el, [
           { opacity: 0, transform: 'translateY(.45em)' },
           { opacity: 1, transform: 'none' }
-        ], { duration: 520, delay: 4300 + i * 24, easing: SOFT }));
+        ], { duration: 520, delay: 4650 + i * 24, easing: SOFT }));
 
-        await sleep(4700);
+        await sleep(5050);
         if (!finished) { root.classList.remove('intro-on'); heroReady(); }
         await sleep(1500);
         finish();
@@ -477,7 +564,7 @@
   /* ------------------------------------------------------------------
      Hero portrait: once the name has settled, thousands of tiny dots
      stream out of the dot of the "i" and assemble Ali's photo.
-     · colours come from the active palette (--dots colour stops)
+     · black and white dots only, on every palette (--dots grey stops)
      · edge dots shrink with their coverage, so the silhouette stays crisp
      · once assembled, the portrait stays perfectly still (no hover effect)
      ------------------------------------------------------------------ */
@@ -597,12 +684,11 @@
 
     const launch = () => {
       const hr = hero.getBoundingClientRect();
-      const dot = document.querySelector('.tittle');
       let sx = W * 0.25, sy = H * 0.7;
-      if (dot) {
-        const d = dot.getBoundingClientRect();
-        sx = d.left - hr.left + d.width / 2;
-        sy = d.top - hr.top + d.height / 2;
+      const dot = typeof window.AH_DOT_AT === 'function' ? window.AH_DOT_AT() : null;   // the dot of the "i"
+      if (dot && isFinite(dot.x) && isFinite(dot.y)) {
+        sx = dot.x - hr.left;
+        sy = dot.y - hr.top;
       }
       parts.forEach(p => {
         p.sx = sx + (Math.random() - 0.5) * 8;
