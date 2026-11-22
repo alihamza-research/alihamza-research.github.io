@@ -854,6 +854,188 @@
   }
 
   /* ------------------------------------------------------------------
+     Toolkit: a small jug pours each card's skills into it.
+     It settles in the card's empty top-right corner and tips forward; a
+     thin stream of the accent colour falls in and ripples, and the skills
+     flow out of the splash into their places, each one full of "water"
+     that then drains away, leaving the plain tag. Then on to the next card.
+     ------------------------------------------------------------------ */
+  const skillGrid = document.querySelector('#skills .grid-3');
+  if (skillGrid && !reduceMotion && Element.prototype.animate && 'IntersectionObserver' in window) {
+    const box = skillGrid.parentElement;
+    const cards = Array.from(skillGrid.querySelectorAll('.card.skill'));
+    skillGrid.classList.add('pour');
+
+    // Jug drawn on a 64-unit grid: spout top-left, handle on the right
+    const BODY = 'M8 14C13 14 17 16 19 19C16 28 14 38 16 47C17 53 21 57 27 57H41C47 57 51 53 52 47C54 38 52 28 47 17V12H18C14 12 10 12.5 8 14Z';
+    const TILT = -52, ORIGIN = [32, 36], SPOUT = [8, 14];
+    const holder = document.createElement('div');
+    holder.innerHTML =
+      '<div class="jug" aria-hidden="true"><span class="jug-tilt"><svg viewBox="0 0 64 64">' +
+      '<clipPath id="jug-inside"><path d="' + BODY + '"/></clipPath>' +
+      '<path class="jug-glass" d="' + BODY + '"/>' +
+      '<g clip-path="url(#jug-inside)"><rect class="jug-water" x="-60" y="0" width="184" height="150"/></g>' +
+      '<path class="jug-line" d="' + BODY + '"/>' +
+      '<path class="jug-line" d="M51 21C60 20 63 30 59 37C57 41 54 43 51 43"/>' +
+      '</svg></span></div>' +
+      '<svg class="jug-stream" aria-hidden="true"><path/></svg>';
+    const jug = holder.firstChild, stream = holder.lastChild;
+    const tilt = jug.querySelector('.jug-tilt'), water = jug.querySelector('.jug-water'), jet = stream.querySelector('path');
+    box.append(jug, stream);
+
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    // play an animation, then keep its end state as inline style
+    const run = (el, frames, opts) => {
+      const an = el.animate(frames, Object.assign({ fill: 'forwards' }, opts));
+      return an.finished.then(() => { try { an.commitStyles(); } catch (e) { /* element gone */ } an.cancel(); }, () => {});
+    };
+    const rel = el => {
+      const a = el.getBoundingClientRect(), b = box.getBoundingClientRect();
+      return { x: a.left - b.left, y: a.top - b.top, w: a.width, h: a.height };
+    };
+    // where the jug stands over a card, and where its spout is once tipped
+    const spot = card => {
+      const c = rel(card), S = jug.offsetWidth, pad = parseFloat(getComputedStyle(card).paddingRight) || 24;
+      const x = c.x + c.w - pad - S * 0.9, y = c.y + pad * 0.5;
+      const k = S / 64, a = TILT * Math.PI / 180;
+      const dx = SPOUT[0] - ORIGIN[0], dy = SPOUT[1] - ORIGIN[1];
+      return {
+        x, y,
+        sx: x + (ORIGIN[0] + dx * Math.cos(a) - dy * Math.sin(a)) * k,
+        sy: y + (ORIGIN[1] + dx * Math.sin(a) + dy * Math.cos(a)) * k
+      };
+    };
+    // the stream lands among the card's tags, a short fall from the spout
+    const splashOf = (lis, s) => {
+      let l = Infinity, r = -Infinity, t = Infinity, b = -Infinity;
+      lis.forEach(li => { const q = rel(li); l = Math.min(l, q.x); r = Math.max(r, q.x + q.w); t = Math.min(t, q.y); b = Math.max(b, q.y + q.h); });
+      return { x: Math.max(l + 20, Math.min(s.sx - 60, r - 16)), y: (t + b) / 2 };
+    };
+    const ripple = p => {
+      [0, 170].forEach(d => {
+        const r = document.createElement('span');
+        r.className = 'jug-ripple';
+        r.setAttribute('aria-hidden', 'true');
+        r.style.left = p.x + 'px';
+        r.style.top = p.y + 'px';
+        box.appendChild(r);
+        r.animate([{ transform: 'scale(.15)', opacity: .8 }, { transform: 'scale(1.7)', opacity: 0 }],
+          { duration: 950, delay: d, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' })
+          .finished.then(() => r.remove(), () => r.remove());
+      });
+    };
+
+    let at = null;      // where the jug stands now
+    let level = 21;     // water line inside the jug (64-unit grid); it drops with every pour
+    const waterAt = (deg, lv) => `rotate(${deg}deg) translateY(${lv}px)`;
+    water.style.transform = waterAt(0, level);
+
+    const moveTo = async s => {
+      if (!at || Math.hypot(s.x - at.x, s.y - at.y) > 900) {
+        if (at) await run(jug, [{ opacity: 1 }, { opacity: 0 }], { duration: 260 });
+        await run(jug, [
+          { opacity: 0, transform: `translate(${s.x}px, ${s.y - 16}px)` },
+          { opacity: 1, transform: `translate(${s.x}px, ${s.y}px)` }
+        ], { duration: 460, easing: 'cubic-bezier(.22,1,.36,1)' });
+      } else {
+        await run(jug, [
+          { transform: `translate(${at.x}px, ${at.y}px)` },
+          { transform: `translate(${(at.x + s.x) / 2}px, ${Math.min(at.y, s.y) - 26}px)`, offset: .5 },
+          { transform: `translate(${s.x}px, ${s.y}px)` }
+        ], { duration: 480, easing: 'cubic-bezier(.65,0,.35,1)' });
+      }
+      at = s;
+    };
+    let righting = Promise.resolve();
+
+    const pourInto = async card => {
+      const s = spot(card);
+      await moveTo(s);
+      const lis = Array.from(card.querySelectorAll('.keys li'));
+      const p = splashOf(lis, s);
+      // tip the jug; the water inside stays level
+      const tipping = { duration: 300, easing: 'cubic-bezier(.45,0,.2,1)' };
+      run(tilt, [{ transform: 'rotate(0deg)' }, { transform: `rotate(${TILT}deg)` }], tipping);
+      run(water, [{ transform: waterAt(0, level) }, { transform: waterAt(-TILT, level) }], tipping);
+      await wait(200);
+      // the stream leaves the spout and falls in a parabola onto the splash
+      jet.setAttribute('d', `M${s.sx} ${s.sy}Q${(s.sx + p.x) / 2} ${s.sy} ${p.x} ${p.y}`);
+      const len = jet.getTotalLength();
+      jet.style.strokeDasharray = `${len} ${len + 20}`;
+      await run(jet, [{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 200, easing: 'cubic-bezier(.55,0,1,.45)' });
+      ripple(p);
+      // the skills flow out of the splash, full of water, then drain
+      const STEP = 44;
+      lis.forEach((li, i) => {
+        const q = rel(li);
+        li.classList.add('poured', 'wet');
+        li.animate([
+          { transform: `translate(${p.x - q.x - q.w / 2}px, ${p.y - q.y - q.h / 2}px) scale(.16)`, opacity: 0 },
+          { opacity: 1, offset: .18 },
+          { transform: 'translate(0, 0) scale(1.05, .93)', offset: .74 },
+          { transform: 'none', opacity: 1 }
+        ], { duration: 600, delay: i * STEP, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+        setTimeout(() => li.classList.remove('wet'), i * STEP + 560);
+      });
+      await wait(lis.length * STEP + 40);
+      // stop pouring: the stream's tail falls away; the jug rights itself, a little lighter,
+      // already gliding on to the next card
+      run(jet, [{ strokeDashoffset: 0 }, { strokeDashoffset: -len - 4 }], { duration: 240, easing: 'cubic-bezier(.55,0,1,.45)' });
+      const next = Math.min(level + 4.2, 47);
+      const upright = { duration: 340, easing: 'cubic-bezier(.45,0,.2,1)' };
+      run(water, [{ transform: waterAt(-TILT, level) }, { transform: waterAt(0, next) }], upright);
+      level = next;
+      righting = run(tilt, [{ transform: `rotate(${TILT}deg)` }, { transform: 'rotate(0deg)' }], upright);
+      await wait(140);
+    };
+
+    // cards join the queue as they scroll into view; the jug serves them in order
+    const queue = [];
+    let busy = false, poured = 0;
+    const leave = async () => {
+      await righting;
+      await run(jug, [{ opacity: 1 }, { opacity: 0, transform: `translate(${at.x}px, ${at.y - 12}px)` }], { duration: 520, easing: 'ease-in' });
+      jug.remove();
+      stream.remove();
+    };
+    const pump = async () => {
+      if (busy) return;
+      busy = true;
+      try {
+        while (queue.length) {
+          queue.sort((a, b) => cards.indexOf(a.card) - cards.indexOf(b.card));
+          const { card, ready } = queue.shift();
+          if (ready > performance.now()) await wait(ready - performance.now());
+          await pourInto(card);
+          poured++;
+        }
+        if (poured === cards.length) { await leave(); return; }
+        // nothing else in view yet: step back until the next card arrives
+        await wait(900);
+        if (!queue.length && at) { await righting; await run(jug, [{ opacity: 1 }, { opacity: 0 }], { duration: 300 }); at = null; }
+      } catch (e) {
+        skillGrid.classList.remove('pour');   // never leave the skills hidden
+        jug.remove();
+        stream.remove();
+        return;
+      } finally {
+        busy = false;
+      }
+      if (queue.length) pump();
+    };
+    const watch = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        watch.unobserve(entry.target);
+        // let the card finish its own entrance first
+        queue.push({ card: entry.target, ready: performance.now() + 950 });
+        pump();
+      });
+    }, { threshold: 0.45 });
+    cards.forEach(card => watch.observe(card));
+  }
+
+  /* ------------------------------------------------------------------
      Copy email
      ------------------------------------------------------------------ */
   function copyText(text) {

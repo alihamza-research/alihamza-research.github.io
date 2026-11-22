@@ -33,6 +33,7 @@
   --card: rgba(255, 255, 255, .45); --card-edge: #2F3541;
   --accent-edge: #2F3541; --path: #2F3541; --glow: rgba(47, 53, 65, .32);
   --accent-ink: #2F3541;   /* off-white would vanish on Lavender Milk: thin accent marks there use Charcoal Slate */
+  --on-accent-ink: #ECE6F4;
   color-scheme: light;
 }
 
@@ -620,6 +621,28 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 
 /* ---------- Toolkit ---------- */
 .card.skill { gap: 14px; }
+
+/* A jug pours each card's skills in (script.js). The "water" is the accent, so the 60/30/10 split holds */
+#skills { --liquid: var(--accent-ink, var(--c10)); --on-liquid: var(--on-accent-ink, var(--on10)); }
+#skills .container { position: relative; }
+.jug, .jug-stream, .jug-ripple { position: absolute; left: 0; top: 0; z-index: 3; pointer-events: none; }
+.jug { width: clamp(42px, 3.8vw, 54px); aspect-ratio: 1; opacity: 0; will-change: transform; }
+.jug-tilt { display: block; width: 100%; height: 100%; transform-origin: 50% 56.25%; }
+.jug svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.jug-glass { fill: var(--hd); fill-opacity: .06; }
+.jug-water { fill: var(--liquid); transform-box: view-box; transform-origin: 32px 36px; }
+.jug-line { fill: none; stroke: var(--hd); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.jug-stream { width: 100%; height: 100%; overflow: visible; }
+.jug-stream path { fill: none; stroke: var(--liquid); stroke-width: 3; stroke-linecap: round; stroke-dashoffset: 9999; }
+.jug-ripple { width: 58px; height: 15px; margin: -7.5px 0 0 -29px; border: 1.5px solid var(--liquid); border-radius: 50%; opacity: 0; }
+/* the tags wait for the jug; each one lands full, then the water drains out of it */
+.js .pour [data-reveal] > .card.skill .keys li { opacity: 0; transform: none; transition: none; }
+.js .pour [data-reveal] > .card.skill .keys li.poured {
+  opacity: 1;
+  background: linear-gradient(var(--liquid), var(--liquid)) no-repeat 50% 100% / 100% 0%;
+  transition: background-size .85s cubic-bezier(.55, 0, .8, .4), color .5s ease .2s, border-color .7s ease;
+}
+.js .pour [data-reveal] > .card.skill .keys li.poured.wet { background-size: 100% 100%; color: var(--on-liquid); border-color: var(--liquid); transition: none; }
 
 /* ---------- Contact ---------- */
 .contact { padding-bottom: 0; }
