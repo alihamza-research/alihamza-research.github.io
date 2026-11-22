@@ -33,9 +33,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=6">
-  <script src="portrait-data.js?v=4" defer></script>
-  <script src="script.js?v=4" defer></script>
+  <link rel="stylesheet" href="styles.css?v=7">
+  <script src="script.js?v=7" defer></script>
+  <script src="portrait-data.js?v=7" async></script>
 
   <script type="application/ld+json">
   {
@@ -45,7 +45,7 @@
     "jobTitle": "Software Engineer and AI Researcher",
     "affiliation": { "@type": "CollegeOrUniversity", "name": "National University of Sciences and Technology (NUST)" },
     "alumniOf": { "@type": "CollegeOrUniversity", "name": "COMSATS University Islamabad" },
-    "knowsAbout": ["Software Engineering", "Agentic AI", "Retrieval-Augmented Generation", "Knowledge Graphs", "Information Retrieval"],
+    "knowsAbout": ["Natural Language Processing", "Threat Intelligence Systems", "Agentic AI", "Large Language Models", "Empirical Software Engineering", "Retrieval-Augmented Generation", "Information Retrieval"],
     "email": "mailto:alihamzaminhas.21@gmail.com",
     "sameAs": [
       "https://github.com/ali-Hamza817",
@@ -106,9 +106,17 @@
         <div class="hero-bottom">
           <div class="hero-stage">
             <div class="hero-id">
-              <!-- One line in the open space above the name -->
+              <!-- Research interests as a ladder, in the open space above the name -->
               <div class="hero-about" id="about" data-stage style="--sd:.15">
-                <h2 class="about-title">Grounding language models<br> <em>in verifiable evidence.</em></h2>
+                <h2 class="ladder-label" id="interests-label">Research interests</h2>
+                <div class="ladder">
+                  <ol class="rungs" aria-labelledby="interests-label">
+                    <li class="rung"><span class="rung-n" aria-hidden="true">01</span><span class="rung-t"><span>NLP</span></span></li>
+                    <li class="rung"><span class="rung-n" aria-hidden="true">02</span><span class="rung-t"><span>Threat Intelligence Systems</span></span></li>
+                    <li class="rung"><span class="rung-n" aria-hidden="true">03</span><span class="rung-t"><span>Agentic AI &amp; LLMs</span></span></li>
+                    <li class="rung"><span class="rung-n" aria-hidden="true">04</span><span class="rung-t"><span>Empirical Software Engineering</span></span></li>
+                  </ol>
+                </div>
               </div>
               <h1 class="hero-name">
                 <span class="sr-only">Ali Hamza</span>

@@ -144,6 +144,45 @@
 
   applyTheme(current());
 
+  /* Portrait look, at the foot of the dock: the photo's own colours, or black and white dots.
+     Also ?portrait=colour / ?portrait=bw, and the "P" key. Remove with the dock once one is chosen. */
+  const LOOKS = { colour: 'Portrait · photo colours', bw: 'Portrait · black & white' };
+  let portraitLook = 'colour';
+  try {
+    const asked = new URLSearchParams(location.search).get('portrait');
+    const saved = localStorage.getItem('ah-portrait');
+    if (LOOKS[asked]) portraitLook = asked;
+    else if (LOOKS[saved]) portraitLook = saved;
+  } catch (e) { /* storage unavailable */ }
+  let applyPortraitLook = () => {};               // set by the portrait below, once it exists
+  const lookBtn = document.createElement('button');
+  lookBtn.type = 'button';
+  lookBtn.className = 'swatch look';
+  const lookTip = document.createElement('span');
+  lookTip.className = 'tip';
+  lookBtn.appendChild(lookTip);
+  const showLook = () => {
+    lookBtn.dataset.look = portraitLook;
+    lookBtn.setAttribute('aria-label', LOOKS[portraitLook] + ' (click to switch)');
+    lookTip.textContent = LOOKS[portraitLook];
+  };
+  const toggleLook = () => {
+    portraitLook = portraitLook === 'colour' ? 'bw' : 'colour';
+    try { localStorage.setItem('ah-portrait', portraitLook); } catch (e) { /* storage unavailable */ }
+    showLook();
+    applyPortraitLook();
+    flash(`<span>${LOOKS[portraitLook]}</span>`);
+  };
+  showLook();
+  lookBtn.addEventListener('click', toggleLook);
+  dockList.appendChild(lookBtn);
+  document.addEventListener('keydown', e => {
+    if (e.key.toLowerCase() !== 'p' || e.metaKey || e.ctrlKey || e.altKey) return;
+    const t = e.target;
+    if (t && (/^(input|textarea|select)$/i.test(t.tagName) || t.isContentEditable)) return;
+    toggleLook();
+  });
+
   /* ------------------------------------------------------------------
      Scroll reveals, counters
      ------------------------------------------------------------------ */
@@ -564,14 +603,17 @@
   /* ------------------------------------------------------------------
      Hero portrait: once the name has settled, thousands of tiny dots
      stream out of the dot of the "i" and assemble Ali's photo.
-     · black and white dots only, on every palette (--dots grey stops)
+     · two looks, switched from the palette dock: the photo's own colours
+       (data.rgb), or black and white (the grey --dots stops)
      · edge dots shrink with their coverage, so the silhouette stays crisp
      · once assembled, the portrait stays perfectly still (no hover effect)
+     · the data file loads on its own (async), so it never holds up the intro
      ------------------------------------------------------------------ */
   const hero = document.querySelector('.hero');
   const portraitBox = document.querySelector('.hero-portrait');
-  const PD = window.AH_PORTRAIT;
-  if (hero && portraitBox && PD && PD.data) {
+  const initPortrait = PD => {
+    if (!PD || !PD.data || initPortrait.done) return;
+    initPortrait.done = true;
     const canvas = document.createElement('canvas');
     canvas.className = 'dots';
     canvas.setAttribute('aria-hidden', 'true');
@@ -580,23 +622,27 @@
 
     const CH = PD.channels || 1;
     const raw = atob(PD.data);
+    const rgb = PD.rgb ? atob(PD.rgb) : '';
     const cells = [];
-    for (let i = 0; i < PD.cols * PD.rows; i++) {
+    for (let i = 0, k = 0; i < PD.cols * PD.rows; i++) {
       const v = raw.charCodeAt(i * CH);
       if (!v) continue;
       cells.push({
         c: i % PD.cols, r: Math.floor(i / PD.cols), t: (v - 1) / 254,
-        cov: CH > 1 ? raw.charCodeAt(i * CH + 1) / 255 : 1
+        cov: CH > 1 ? raw.charCodeAt(i * CH + 1) / 255 : 1,
+        R: rgb.charCodeAt(k * 3), G: rgb.charCodeAt(k * 3 + 1), B: rgb.charCodeAt(k * 3 + 2)
       });
+      k++;
     }
+    const hasColour = rgb.length === cells.length * 3;
 
     const SHADES = 48;
     let W = 0, H = 0, dpr = 1, gap = 4, stride = 1;
-    let parts = [], buckets = [], shades = [];
+    let parts = [], groups = [], shades = [];
     let state = 'idle';                       // idle → flying → settled
     let flyStart = 0, raf = 0, heroVisible = true;
 
-    // Palette colour stops → SHADES fill colours (dark photo tones → first stop, light → last)
+    // Black and white: the grey colour stops → SHADES fill colours (dark photo tones → first stop)
     const toRGB = c => {
       ctx.fillStyle = '#000000';
       ctx.fillStyle = c;
@@ -611,7 +657,7 @@
         .map(s => s.trim().split(/\s+/))
         .filter(s => s.length === 2 && !isNaN(parseFloat(s[1])))
         .map(([col, pos]) => [toRGB(col), parseFloat(pos)]);
-      if (stops.length < 2) stops = [[toRGB(cs.getPropertyValue('--c30').trim()), 0], [toRGB(cs.getPropertyValue('--head').trim()), 1]];
+      if (stops.length < 2) stops = [[[14, 14, 14], 0], [[245, 245, 245], 1]];
       shades = [];
       for (let b = 0; b < SHADES; b++) {
         const t = b / (SHADES - 1);
@@ -621,6 +667,26 @@
         const u = Math.min(1, Math.max(0, (t - pa) / ((pb - pa) || 1)));
         shades.push(`rgb(${A.map((v, j) => Math.round(v + (B[j] - v) * u)).join(',')})`);
       }
+    };
+
+    // Dots that share a fill colour are drawn together (one fillStyle per group per frame).
+    // Photo colours are grouped at 5 bits per channel: at most 4/255 away from the photo.
+    const regroup = () => {
+      const colour = portraitLook === 'colour' && hasColour;
+      const map = new Map();
+      for (const p of parts) {
+        const key = colour ? ((p.R >> 3) << 10) | ((p.G >> 3) << 5) | (p.B >> 3) : Math.round(p.t * (SHADES - 1));
+        let g = map.get(key);
+        if (!g) { g = { fill: '', list: [] }; map.set(key, g); }
+        g.list.push(p);
+      }
+      groups = [];
+      map.forEach((g, key) => {
+        g.fill = colour
+          ? `rgb(${((key >> 10) & 31) * 8 + 4},${((key >> 5) & 31) * 8 + 4},${(key & 31) * 8 + 4})`
+          : shades[key];
+        groups.push(g);
+      });
     };
 
     const layout = () => {
@@ -635,10 +701,8 @@
       const nextStride = gap < 1.3 ? 2 : 1;
       if (nextStride !== stride || !parts.length) {
         stride = nextStride;
-        const pick = stride === 1 ? cells : cells.filter(q => q.c % 2 === 0 && q.r % 2 === 0);
-        parts = pick.map(q => ({ c: q.c, r: q.r, t: q.t, cov: q.cov }));
-        buckets = Array.from({ length: SHADES }, () => []);
-        parts.forEach(p => buckets[Math.round(p.t * (SHADES - 1))].push(p));
+        parts = (stride === 1 ? cells : cells.filter(q => q.c % 2 === 0 && q.r % 2 === 0)).map(q => Object.assign({}, q));
+        regroup();
       }
       const ox = br.left - hr.left + (br.width - gap * PD.cols) / 2;
       const oy = br.top - hr.top + (br.height - gap * PD.rows);
@@ -655,11 +719,9 @@
       ctx.clearRect(0, 0, W, H);
       const elapsed = now - flyStart;
       let moving = false;
-      for (let b = 0; b < SHADES; b++) {
-        const list = buckets[b];
-        if (!list.length) continue;
-        ctx.fillStyle = shades[b];
-        for (const p of list) {
+      for (const g of groups) {
+        ctx.fillStyle = g.fill;
+        for (const p of g.list) {
           let x = p.tx, y = p.ty, s = p.s;
           if (state === 'flying') {
             let k = (elapsed - p.delay) / p.dur;
@@ -714,8 +776,15 @@
     if (window.AH_HERO_READY) start();
     else document.addEventListener('ah:hero-ready', start, { once: true });
 
-    // Re-colour on palette change, re-layout on resize, pause when off screen
-    new MutationObserver(() => { readShades(); loop(); })
+    // Switching the look (dock button / "P"): recolour in place with a soft fade
+    applyPortraitLook = () => {
+      if (state === 'idle') return;
+      regroup();
+      loop();
+      if (!reduceMotion && canvas.animate) canvas.animate([{ opacity: 0.25 }, { opacity: 1 }], { duration: 600, easing: 'ease-out' });
+    };
+    // Re-read the greys on palette change, re-layout on resize, pause when off screen
+    new MutationObserver(() => { readShades(); regroup(); loop(); })
       .observe(root, { attributes: true, attributeFilter: ['data-theme'] });
     let resizeTimer = 0;
     addEventListener('resize', () => {
@@ -725,6 +794,52 @@
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(([entry]) => { heroVisible = entry.isIntersecting; if (heroVisible) loop(); }).observe(hero);
     }
+  };
+  if (hero && portraitBox) {
+    if (window.AH_PORTRAIT) initPortrait(window.AH_PORTRAIT);
+    else document.addEventListener('ah:portrait-data', () => initPortrait(window.AH_PORTRAIT), { once: true });
+  }
+
+  /* ------------------------------------------------------------------
+     Research-interest ladder (hero): a rail with one rung per interest.
+     It builds rung by rung from the bottom, then a marker climbs it,
+     lighting one interest at a time. Hover a rung to hold it.
+     ------------------------------------------------------------------ */
+  const ladder = document.querySelector('.ladder');
+  if (ladder) {
+    const rungs = Array.from(ladder.querySelectorAll('.rung'));
+    const mark = document.createElement('span');
+    mark.className = 'ladder-mark';
+    mark.setAttribute('aria-hidden', 'true');
+    ladder.appendChild(mark);
+    let active = rungs.length - 1, held = false;
+    const setActive = i => {
+      active = i;
+      rungs.forEach((r, k) => r.classList.toggle('on', k === i));
+      mark.style.transform = `translateY(${rungs[i].offsetTop}px)`;
+      mark.style.height = rungs[i].offsetHeight + 'px';
+    };
+    const climb = () => {
+      if (held || document.hidden || !ladder.offsetParent) return;
+      setActive((active - 1 + rungs.length) % rungs.length);   // one rung up; from the top, back to the foot
+    };
+    const build = () => {
+      rungs.forEach((r, i) => r.style.setProperty('--rd', ((rungs.length - 1 - i) * 0.14 + 0.35).toFixed(2) + 's'));
+      ladder.classList.add('built');
+      if (reduceMotion) { ladder.classList.add('still'); return; }
+      setTimeout(() => {
+        setActive(rungs.length - 1);
+        ladder.classList.add('ready');
+        setInterval(climb, 2600);
+      }, 1500);
+    };
+    rungs.forEach((r, i) => {
+      r.addEventListener('pointerenter', () => { if (!ladder.classList.contains('ready')) return; held = true; setActive(i); });
+      r.addEventListener('pointerleave', () => { held = false; });
+    });
+    addEventListener('resize', () => { if (ladder.classList.contains('ready')) setActive(active); });
+    if (window.AH_HERO_READY) build();
+    else document.addEventListener('ah:hero-ready', build, { once: true });
   }
 
   /* ------------------------------------------------------------------
