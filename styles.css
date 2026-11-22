@@ -506,7 +506,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 /* ---------- Research record strip (on the page colour) ----------
    key figures take the accent where it reads at this size (3:1 or better on the page colour);
    elsewhere they use the heading colour, with a short accent bar above each one */
-.stats { padding-block: clamp(44px, 6vw, 72px); background: var(--c60); }
+.stats { padding-block: clamp(44px, 6vw, 72px); background: var(--hero-bg, var(--c60)); }   /* Linen: Off White, like the first screen */
 .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); }
 .stat { display: flex; flex-direction: column; gap: 12px; padding: 6px clamp(14px, 2vw, 28px); border-left: 1px solid var(--rule); }
 .stat:first-child { padding-left: 0; border-left: 0; }
